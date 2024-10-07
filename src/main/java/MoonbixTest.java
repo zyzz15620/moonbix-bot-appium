@@ -1,26 +1,16 @@
-import io.appium.java_client.AppiumBy;
-import io.appium.java_client.TouchAction;
 import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.touch.TapOptions;
-import io.appium.java_client.touch.WaitOptions;
-import io.appium.java_client.touch.offset.PointOption;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,52 +19,32 @@ import java.util.logging.Logger;
 
 public class MoonbixTest {
     AndroidDriver driver;
-    WebDriverWait webDriverWait;
-    Actions actions;
+
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final Logger logger = Logger.getLogger(MoonbixTest.class.getName());
 
     int tapCount = 0;
-    Instant startTime;
     Map<String, Integer> middleScreenLocation = new HashMap<>();;
-
 
     public static void main(String[] args) throws InterruptedException, MalformedURLException {
         MoonbixTest test = new MoonbixTest();
-        test.moonbixAuto();  // Gọi phương thức để chạy tự động hóa
+        test.moonbixAuto();
     }
 
     public void moonbixAuto() throws InterruptedException, MalformedURLException {
-        System.out.println("Setting up driver for MoonBix...");
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability("platformName", "Android");
-        desiredCapabilities.setCapability("appium:udid", Data.deviceId);
-        desiredCapabilities.setCapability("appium:appActivity", Data.appActivity);
-        desiredCapabilities.setCapability("appium:appPackage", Data.appPackage);
-        desiredCapabilities.setCapability("appium:automationName", "UiAutomator2");
-        desiredCapabilities.setCapability("appium:noReset", true);
-        desiredCapabilities.setCapability("appium:fullReset", false);
-        desiredCapabilities.setCapability("appium:forceAppLaunch", true);
-        desiredCapabilities.setCapability("appium:shouldTerminateApp", true);
-//        desiredCapabilities.setCapability("appium:chromedriverExecutable", "/Users/phamanhduc/Documents/telegram-mobile-auto/src/main/resources/chromedriver-macos/chromedriver");
-        desiredCapabilities.setCapability("appium:chromedriver_autodownload", true);
-
-        driver = new AndroidDriver(new URL("http://127.0.0.1:4723/"), desiredCapabilities);
-        actions = new Actions(driver);
-        webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        middleScreenLocation.put("x", driver.manage().window().getSize().width / 2);
-        middleScreenLocation.put("y", driver.manage().window().getSize().height / 2);
+        driver = TelegramDriver.getAndroidDriver();
         System.out.println("Driver setup complete for MoonBix.");
 
         this.goToGame();
-        waitUntilVisibleXpath(Data.PlayGameButtonXpath).click();
+        TelegramDriver.waitUntilVisibleXpath(Data.PlayGameButtonXpath).click();
         System.out.println("check1");
 
         Runnable playAllGamesTask = new Runnable() {
             @Override
             public void run() {
                 try {
-                    playAllGames(); // Gọi phương thức playAllGames()
+                    System.out.println("Running playAllGamesTask");
+                    playAllGames();
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
                 }
@@ -90,10 +60,10 @@ public class MoonbixTest {
             PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
 
             Sequence tapSequence = new Sequence(finger, 1);
-            tapSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));  // Di chuyển đến tọa độ x, y
-            tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));  // Nhấn xuống
-            tapSequence.addAction(new Pause(finger, Duration.ofMillis(100)));  // Dừng lại trong 100ms
-            tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));  // Nhả ra
+            tapSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
+            tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+            tapSequence.addAction(new Pause(finger, Duration.ofMillis(100)));
+            tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
             driver.perform(Collections.singletonList(tapSequence));
 
         } catch (Exception e) {
@@ -103,23 +73,11 @@ public class MoonbixTest {
 
 
     public void goToGame() throws InterruptedException {
-        waitUntilVisibleXpath(Data.chatXpath).click();
-        waitUntilVisibleId(Data.startGameButtonId).click();
+        TelegramDriver.waitUntilVisibleXpath(Data.chatXpath).click();
+        TelegramDriver.waitUntilVisibleId(Data.startGameButtonId).click();
     }
 
-    public WebElement waitUntilVisibleXpath(String xpath){
-        return this.webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.xpath(xpath)));
-    }
-    public WebElement waitUntilVisibleId(String xpath){
-        return this.webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.accessibilityId(xpath)));
-    }
-    public void tap(WebElement element){
-        actions.clickAndHold(element).pause(Duration.ofMillis(100)).release().perform();
-        System.out.println("tap");
-    }
-    public void tap(){
-        actions.clickAndHold().pause(Duration.ofMillis(100)).release().perform();
-    }
+
     private void playGame() throws InterruptedException {
         tapCount = 0;
         int x = middleScreenLocation.get("x");
@@ -178,15 +136,15 @@ public class MoonbixTest {
             while (!buttonClicked && retryCount < maxRetries) {
                 try {
                     // Kiểm tra nút "Play Again"
-                    if (waitUntilVisibleXpath(Data.playAgainXpath).isDisplayed()) {
+                    if (TelegramDriver.waitUntilVisibleXpath(Data.playAgainXpath).isDisplayed()) {
                         System.out.println("play again button displayed");
-                        waitUntilVisibleXpath(Data.playAgainXpath).click();
+                        TelegramDriver.waitUntilVisibleXpath(Data.playAgainXpath).click();
                         buttonClicked = true;
                     }
                     // Kiểm tra nút "Continue"
-                    else if (waitUntilVisibleXpath("(//android.widget.Button)[2]").isDisplayed()) {
+                    else if (TelegramDriver.waitUntilVisibleXpath("(//android.widget.Button)[2]").isDisplayed()) {
                         System.out.println("continue to home button displayed");
-                        waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
+                        TelegramDriver.waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
                         buttonClicked = true;
                         break;
                     }
@@ -213,8 +171,8 @@ public class MoonbixTest {
         return true;
     }
     public void byPassYourDailyRecordScreen(){
-        if(waitUntilVisibleXpath(Data.yourDailyRecordXpath).isDisplayed()){
-            tap(waitUntilVisibleXpath(Data.continueButtonXpath));
+        if(TelegramDriver.waitUntilVisibleXpath(Data.yourDailyRecordXpath).isDisplayed()){
+            TelegramDriver.tap(TelegramDriver.waitUntilVisibleXpath(Data.continueButtonXpath));
         }
     }
 }
