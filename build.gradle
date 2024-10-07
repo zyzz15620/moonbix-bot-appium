@@ -10,12 +10,12 @@ repositories {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'io.appium:java-client:9.3.0'
-    testImplementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
-
+    implementation platform('org.junit:junit-bom:5.10.0')
+    implementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'io.appium:java-client:9.3.0'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
 }
+
 
 test {
     useJUnitPlatform()
