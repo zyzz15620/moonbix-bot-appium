@@ -1,16 +1,15 @@
 import io.appium.java_client.android.AndroidDriver;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,9 +21,10 @@ public class MoonbixTest {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final Logger logger = Logger.getLogger(MoonbixTest.class.getName());
+    private final static int delayTap = 2000;
+    private static int x, y;
 
     int tapCount = 0;
-    Map<String, Integer> middleScreenLocation = new HashMap<>();;
 
     public static void main(String[] args) throws InterruptedException, MalformedURLException {
         MoonbixTest test = new MoonbixTest();
@@ -32,17 +32,26 @@ public class MoonbixTest {
     }
 
     public void moonbixAuto() throws InterruptedException, MalformedURLException {
-        driver = TelegramDriver.getAndroidDriver();
+        driver = AndroidDriverUtils.getAndroidDriver();
+        x = AndroidDriverUtils.middleScreenLocation.get("x");
+        y = AndroidDriverUtils.middleScreenLocation.get("y");
         System.out.println("Driver setup complete for MoonBix.");
 
-        this.goToGame();
-        TelegramDriver.waitUntilVisibleXpath(Data.PlayGameButtonXpath).click();
-        System.out.println("check1");
 
         Runnable playAllGamesTask = new Runnable() {
             @Override
             public void run() {
                 try {
+                    goToGame();
+                    byPassYourDailyRecordScreen();
+                    checkLeaderBoardWidget();
+                    checkFriendsWidget();
+                    checkSurpriseWidget();
+                    checkTasksWidget();
+
+                    clickHomeWidget();
+                    AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath).click();
+
                     System.out.println("Running playAllGamesTask");
                     playAllGames();
                 } catch (InterruptedException e) {
@@ -55,33 +64,16 @@ public class MoonbixTest {
     }
 
 
-    public void tapAtCoordinates(int x, int y) {
-        try {
-            PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
-
-            Sequence tapSequence = new Sequence(finger, 1);
-            tapSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
-            tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
-            tapSequence.addAction(new Pause(finger, Duration.ofMillis(100)));
-            tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
-            driver.perform(Collections.singletonList(tapSequence));
-
-        } catch (Exception e) {
-            System.out.println("Error while tapping at coordinates: " + e.getMessage());
-        }
-    }
-
 
     public void goToGame() throws InterruptedException {
-        TelegramDriver.waitUntilVisibleXpath(Data.chatXpath).click();
-        TelegramDriver.waitUntilVisibleId(Data.startGameButtonId).click();
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.chatXpath).click();
+        AndroidDriverUtils.waitUntilVisibleId(Data.startGameButtonId).click();
     }
 
 
     private void playGame() throws InterruptedException {
         tapCount = 0;
-        int x = middleScreenLocation.get("x");
-        int y = middleScreenLocation.get("y");
+
         ScheduledExecutorService schedulerTap = Executors.newScheduledThreadPool(1);
         System.out.println("Starting game with coordinates: " + x + ", " + y);
 
@@ -94,19 +86,18 @@ public class MoonbixTest {
                         schedulerTap.shutdown();
                         return;
                     }
-                    tapAtCoordinates(x, y);
+                    ActionsUtils.tapAtCoordinates(x, y);
                     System.out.println("tapAtCoordinates: " + x + ", " + y);
                     tapCount++;
                     System.out.println("Tap #" + tapCount);
                 } catch (Exception e) {
                     System.out.println("Error occurred during tapping: " + e.getMessage());
+                    e.printStackTrace();
                     schedulerTap.shutdown(); // Shutdown nếu có lỗi xảy ra
                 }
             }
         };
-
-        // Thay đổi cách lên lịch với scheduleAtFixedRate
-        schedulerTap.scheduleAtFixedRate(tapTask, 0, 1900, TimeUnit.MILLISECONDS);
+        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap-100 , TimeUnit.MILLISECONDS);
 
         try {
             // Chờ cho đến khi scheduler hoàn thành hoặc hết thời gian chờ
@@ -117,16 +108,17 @@ public class MoonbixTest {
             }
         } catch (InterruptedException e) {
             System.out.println("Error occurred during termination waiting: " + e.getMessage());
+            e.printStackTrace();
             schedulerTap.shutdownNow();  // Đảm bảo scheduler được tắt nếu gặp lỗi
             Thread.currentThread().interrupt();  // Khôi phục trạng thái gián đoạn
         }
     }
 
-
-
     public void playAllGames() throws InterruptedException {
         for (int i = 0; i < 6; i++) {
+            System.out.println("Starting game #" + (i + 1));
             playGame();
+            System.out.println("Game #" + (i + 1) + " finished.");
 
             boolean buttonClicked = false;
             int retryCount = 0;
@@ -135,44 +127,80 @@ public class MoonbixTest {
 
             while (!buttonClicked && retryCount < maxRetries) {
                 try {
-                    // Kiểm tra nút "Play Again"
-                    if (TelegramDriver.waitUntilVisibleXpath(Data.playAgainXpath).isDisplayed()) {
-                        System.out.println("play again button displayed");
-                        TelegramDriver.waitUntilVisibleXpath(Data.playAgainXpath).click();
+                    if (AndroidDriverUtils.isElementXpathExist(Data.playAgainXpath)) {
+                        System.out.println("Play Again button is visible after game #" + (i + 1) + ", clicking...");
+                        AndroidDriverUtils.waitUntilVisibleXpath(Data.playAgainXpath).click();
                         buttonClicked = true;
+                        break;
                     }
                     // Kiểm tra nút "Continue"
-                    else if (TelegramDriver.waitUntilVisibleXpath("(//android.widget.Button)[2]").isDisplayed()) {
-                        System.out.println("continue to home button displayed");
-                        TelegramDriver.waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
-                        buttonClicked = true;
-                        break;
+                    else if (AndroidDriverUtils.isElementXpathExist("(//android.widget.Button)[2]")) {
+                        AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
+                        System.out.println("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
+                        return;
+                    } else {
+                        System.out.println("No relevant button (Play Again or Continue) found after game #" + (i + 1));
+                        break;  // Không có nút nào hiện ra, thoát vòng lặp while
                     }
-                    else {
-                        System.out.println("no button displayed");
-                        break;
-                    }
+                } catch (NoSuchElementException e) {
+                    System.out.println("Retry #" + retryCount + " for game #" + (i + 1) + ": Element not found.");
+                } catch (TimeoutException e) {
+                    System.out.println("Retry #" + retryCount + " for game #" + (i + 1) + ": Timeout while waiting for element.");
                 } catch (Exception e) {
-                    System.out.println("Retry #" + retryCount + " - Button not yet visible.");
+                    System.out.println("Unexpected error during retry #" + retryCount + " for game #" + (i + 1) + ": " + e.getMessage());
+                    e.printStackTrace();
                 }
-
                 retryCount++;
                 Thread.sleep(retryDelay);
             }
-
             if (!buttonClicked) {
-                System.out.println("No button was clicked after retrying " + maxRetries + " times.");
+                System.out.println("No button was clicked after retrying " + maxRetries + " times for game #" + (i + 1) + ".");
             }
         }
     }
+
+
+
 
 
     public boolean remainingGameAttempts(){
         return true;
     }
+    public void clickHomeWidget(){
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath).click();
+
+    }
     public void byPassYourDailyRecordScreen(){
-        if(TelegramDriver.waitUntilVisibleXpath(Data.yourDailyRecordXpath).isDisplayed()){
-            TelegramDriver.tap(TelegramDriver.waitUntilVisibleXpath(Data.continueButtonXpath));
+        if(AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)){
+            AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath).click();
         }
+        System.out.println("passed Your Daily Record screen");
+    }
+    public void checkLeaderBoardWidget(){
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.leaderboardWidgetXpath).click();
+        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofSeconds(1) );
+        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofSeconds(1) );
+        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofSeconds(1) );
+        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofSeconds(1) );
+    }
+    public void checkTasksWidget() throws InterruptedException {
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.taskWidgetXpath).click();
+
+        if(AndroidDriverUtils.isElementXpathExist(Data.unfinishedTasksListXpath)) {
+            List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
+            for (WebElement task : tasks) {
+                task.click();
+                Thread.sleep(2000);
+                ActionsUtils.swipe(0, y, 350, y, Duration.ofSeconds(1));
+            }
+        }
+        System.out.println("tasks done");
+    }
+    public void checkFriendsWidget(){
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath).click();
+    }
+    public void checkSurpriseWidget(){
+        AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath).click();
+
     }
 }

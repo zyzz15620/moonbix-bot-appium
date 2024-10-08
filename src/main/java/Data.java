@@ -42,4 +42,8 @@ public class Data {
     //common
     public static final String goBackXpath = "(//android.widget.ImageView[@content-desc=\"Go back\"])[1]"; //there are 2 buttons, 2nd one is back from chat, 1st is back from the game
 
+    //Tasks page
+    public static final String unfinishedTasksListXpath = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View[android.widget.Image[3] and not(android.widget.Image[@text='check'])]";
+
+
 }

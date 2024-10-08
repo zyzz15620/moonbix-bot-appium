@@ -9,16 +9,20 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class TelegramDriver {
+public class AndroidDriverUtils {
     private static AndroidDriver driver;
     private static WebDriverWait webDriverWait;
-    private static Actions actions;
+    public static final Map<String, Integer> middleScreenLocation = new HashMap<>();;
+
 
     //This method need to run first before any other methods
     public static AndroidDriver getAndroidDriver() throws MalformedURLException {
         if(driver==null){
-            System.out.println("Setting up driver for MoonBix...");
+            System.out.println("Setting up driver for Telegram...");
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
             desiredCapabilities.setCapability("platformName", "Android");
             desiredCapabilities.setCapability("appium:udid", Data.deviceId);
@@ -29,11 +33,14 @@ public class TelegramDriver {
             desiredCapabilities.setCapability("appium:fullReset", false);
             desiredCapabilities.setCapability("appium:forceAppLaunch", true);
             desiredCapabilities.setCapability("appium:shouldTerminateApp", true);
+            desiredCapabilities.setCapability("appium:newCommandTimeout", 3600);
 //        desiredCapabilities.setCapability("appium:chromedriverExecutable", "/Users/phamanhduc/Documents/telegram-mobile-auto/src/main/resources/chromedriver-macos/chromedriver");
-            desiredCapabilities.setCapability("appium:chromedriver_autodownload", true);
+//            desiredCapabilities.setCapability("appium:chromedriver_autodownload", true);
+
             driver = new AndroidDriver(new URL("http://127.0.0.1:4723/"), desiredCapabilities);
             webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(10));
-            actions = new Actions(driver);
+            middleScreenLocation.put("x", driver.manage().window().getSize().width/2);
+            middleScreenLocation.put("y", driver.manage().window().getSize().height/2);
         }
         return driver;
     }
@@ -44,16 +51,23 @@ public class TelegramDriver {
     public static WebElement waitUntilVisibleXpath(String xpath){
         return webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.xpath(xpath)));
     }
-    public static WebElement waitUntilVisibleId(String xpath){
-        return webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.accessibilityId(xpath)));
+    public static List<WebElement> waitUntilAllVisibleXpath(String xpath) {
+        return webDriverWait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(AppiumBy.xpath(xpath)));
+    }
+    public static WebElement waitUntilVisibleId(String Id){
+        return webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.accessibilityId(Id)));
+    }
+    public static List<WebElement> waitUntilAllVisibleId(String Id) {
+        return webDriverWait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(AppiumBy.accessibilityId(Id)));
+    }
+    public static boolean isElementXpathExist(String xpath){
+        try {
+            WebElement element = waitUntilVisibleXpath(xpath);
+            return element != null; //trả về true nếu ko là null
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
-    public static void tap(WebElement element){
-        actions.clickAndHold(element).pause(Duration.ofMillis(100)).release().perform();
-        System.out.println("tap");
-    }
-
-    public static void tap(){
-        actions.clickAndHold().pause(Duration.ofMillis(100)).release().perform();
-    }
 }
