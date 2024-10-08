@@ -136,6 +136,7 @@ public class MoonbixTest {
                     // Kiểm tra nút "Continue"
                     else if (AndroidDriverUtils.isElementXpathExist("(//android.widget.Button)[2]")) {
                         AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
+                        AndroidDriverUtils.waitUntilVisibleXpath(Data.goBackXpath);
                         System.out.println("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
                         return;
                     } else {
@@ -191,7 +192,7 @@ public class MoonbixTest {
             for (WebElement task : tasks) {
                 task.click();
                 Thread.sleep(2000);
-                ActionsUtils.swipe(0, y, 350, y, Duration.ofSeconds(1));
+                ActionsUtils.swipe(1, y, 350, y, Duration.ofSeconds(1));
             }
         }
         System.out.println("tasks done");
