@@ -8,6 +8,7 @@ import org.openqa.selenium.interactions.Sequence;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -42,6 +43,9 @@ public class MoonbixTest {
             @Override
             public void run() {
                 try {
+                    System.out.println("Starting playAllGamesTask at: " + LocalDateTime.now());
+                    logger.info("Starting playAllGamesTask at: " + LocalDateTime.now());
+
                     goToGame();
                     byPassYourDailyRecordScreen();
                     checkLeaderBoardWidget();
@@ -50,24 +54,26 @@ public class MoonbixTest {
                     checkTasksWidget();
 
                     clickHomeWidget();
-                    AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath).click();
+                    ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
 
                     System.out.println("Running playAllGamesTask");
                     playAllGames();
+                    System.out.println("Completed playAllGamesTask at: " + LocalDateTime.now());
+                    logger.info("Completed playAllGamesTask at: " + LocalDateTime.now());
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
                 }
             }
         };
-        scheduler.scheduleAtFixedRate(playAllGamesTask, 0, 1, TimeUnit.HOURS);
-        System.out.println("check2");
+        scheduler.scheduleAtFixedRate(playAllGamesTask, 0, 56, TimeUnit.MINUTES);
+        System.out.println("MoonBix automation task scheduled to run every hour.");
     }
 
 
 
     public void goToGame() throws InterruptedException {
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.chatXpath).click();
-        AndroidDriverUtils.waitUntilVisibleId(Data.startGameButtonId).click();
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.chatXpath));
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleId(Data.startGameButtonId));
     }
 
 
@@ -93,11 +99,11 @@ public class MoonbixTest {
                 } catch (Exception e) {
                     System.out.println("Error occurred during tapping: " + e.getMessage());
                     e.printStackTrace();
-                    schedulerTap.shutdown(); // Shutdown nếu có lỗi xảy ra
+                    schedulerTap.shutdown();
                 }
             }
         };
-        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap-100 , TimeUnit.MILLISECONDS);
+        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap-150 , TimeUnit.MILLISECONDS);
 
         try {
             // Chờ cho đến khi scheduler hoàn thành hoặc hết thời gian chờ
@@ -129,14 +135,14 @@ public class MoonbixTest {
                 try {
                     if (AndroidDriverUtils.isElementXpathExist(Data.playAgainXpath)) {
                         System.out.println("Play Again button is visible after game #" + (i + 1) + ", clicking...");
-                        AndroidDriverUtils.waitUntilVisibleXpath(Data.playAgainXpath).click();
+                        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.playAgainXpath));
                         buttonClicked = true;
                         break;
                     }
                     // Kiểm tra nút "Continue"
                     else if (AndroidDriverUtils.isElementXpathExist("(//android.widget.Button)[2]")) {
-                        AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]").click();
-                        AndroidDriverUtils.waitUntilVisibleXpath(Data.goBackXpath);
+                        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]"));
+                        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.goBackXpath));
                         System.out.println("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
                         return;
                     } else {
@@ -168,40 +174,41 @@ public class MoonbixTest {
         return true;
     }
     public void clickHomeWidget(){
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath).click();
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath));
 
     }
     public void byPassYourDailyRecordScreen(){
         if(AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)){
-            AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath).click();
+            ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath));
         }
         System.out.println("passed Your Daily Record screen");
     }
-    public void checkLeaderBoardWidget(){
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.leaderboardWidgetXpath).click();
-        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofSeconds(1) );
-        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofSeconds(1) );
-        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofSeconds(1) );
-        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofSeconds(1) );
+    public void checkLeaderBoardWidget() throws InterruptedException {
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.leaderboardWidgetXpath));
+        Thread.sleep(1);
+        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofMillis(700) );
+        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofMillis(700) );
+        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofMillis(700) );
+        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofMillis(700) );
     }
     public void checkTasksWidget() throws InterruptedException {
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.taskWidgetXpath).click();
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.taskWidgetXpath));
 
         if(AndroidDriverUtils.isElementXpathExist(Data.unfinishedTasksListXpath)) {
             List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
             for (WebElement task : tasks) {
-                task.click();
+                ActionsUtils.tapElement(task);
                 Thread.sleep(2000);
-                ActionsUtils.swipe(1, y, 350, y, Duration.ofSeconds(1));
+                ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(700));
             }
         }
         System.out.println("tasks done");
     }
     public void checkFriendsWidget(){
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath).click();
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath));
     }
     public void checkSurpriseWidget(){
-        AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath).click();
+        ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
 
     }
 }

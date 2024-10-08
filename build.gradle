@@ -16,7 +16,7 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
 }
 
-
-test {
-    useJUnitPlatform()
+task run(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'MoonbixTest'
 }

@@ -1,4 +1,5 @@
 import io.appium.java_client.android.AndroidDriver;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
@@ -19,9 +20,20 @@ public class ActionsUtils {
         }
     }
 
+    public static Point getElementCenter(WebElement element) {
+        if (element == null) {
+            throw new IllegalArgumentException("Element cannot be null");
+        }
+
+        int centerX = element.getLocation().getX() + (element.getSize().getWidth() / 2);
+        int centerY = element.getLocation().getY() + (element.getSize().getHeight() / 2);
+
+        return new Point(centerX, centerY);
+    }
+
     private static void validateCoordinates(int x, int y) {
-        if (x <= 0 || y <= 0) {
-            throw new IllegalArgumentException("Invalid coordinates: x=" + x + ", y=" + y);
+        if (x == 0 && y == 0) {
+            throw new IllegalArgumentException("Invalid coordinates: both x and y are zero");
         }
     }
 
@@ -29,16 +41,28 @@ public class ActionsUtils {
         if (element == null) {
             throw new IllegalArgumentException("Element cannot be null");
         }
-        int x = element.getLocation().getX();
-        int y = element.getLocation().getY();
+        Point center = getElementCenter(element);
+        int x = center.getX();
+        int y = center.getY();
         validateCoordinates(x, y);
         executeTap(x, y, duration);
+    }
+
+    public static void tapElement(WebElement element) {
+        if (element == null) {
+            throw new IllegalArgumentException("Element cannot be null");
+        }
+        Point center = getElementCenter(element);
+        int x = center.getX();
+        int y = center.getY();
+        validateCoordinates(x, y);
+        executeTap(x, y, Duration.ofMillis(150));
     }
 
     public static void tapAtCoordinates(int x, int y) {
         try {
             validateCoordinates(x, y);
-            executeTap(x, y, Duration.ofMillis(100));
+            executeTap(x, y, Duration.ofMillis(150));
         } catch (Exception e) {
             handleException(e, "tapping at coordinates");
         }
@@ -151,3 +175,9 @@ public class ActionsUtils {
         e.printStackTrace();
     }
 }
+//Tap: 100ms đến 150ms.
+//Long Press: 500ms đến 800ms.
+//Swipe: 400ms đến 600ms.
+//Double Tap: 150ms đến 250ms (giữa hai lần chạm).
+//Delay giữa các hành động: 500ms đến 1 giây.
+//Tính ngẫu nhiên: Thêm khoảng thời gian ngẫu nhiên giữa các thao tác.
