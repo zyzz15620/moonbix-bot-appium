@@ -2,14 +2,10 @@ import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Pause;
-import org.openqa.selenium.interactions.PointerInput;
-import org.openqa.selenium.interactions.Sequence;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +25,13 @@ public class MoonbixTest {
 
     public static void main(String[] args) throws InterruptedException, MalformedURLException {
         MoonbixTest test = new MoonbixTest();
-        test.moonbixAuto();
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                test.moonbixAuto();
+            } catch (InterruptedException | MalformedURLException e) {
+                logger.log(Level.SEVERE, "Exception occurred while running moonbixAuto", e);
+            }
+        }, 0, 55, TimeUnit.MINUTES);
     }
 
     public void moonbixAuto() throws InterruptedException, MalformedURLException {
@@ -38,37 +40,29 @@ public class MoonbixTest {
         y = AndroidDriverUtils.middleScreenLocation.get("y");
         System.out.println("Driver setup complete for MoonBix.");
 
+        try {
+            System.out.println("Starting playAllGamesTask at: " + LocalDateTime.now());
+            logger.info("Starting playAllGamesTask at: " + LocalDateTime.now());
 
-        Runnable playAllGamesTask = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println("Starting playAllGamesTask at: " + LocalDateTime.now());
-                    logger.info("Starting playAllGamesTask at: " + LocalDateTime.now());
+            goToGame();
+            byPassYourDailyRecordScreen();
+            checkLeaderBoardWidget();
+            checkFriendsWidget();
+            checkSurpriseWidget();
+            checkTasksWidget();
 
-                    goToGame();
-                    byPassYourDailyRecordScreen();
-                    checkLeaderBoardWidget();
-                    checkFriendsWidget();
-                    checkSurpriseWidget();
-                    checkTasksWidget();
+            clickHomeWidget();
+            ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
 
-                    clickHomeWidget();
-                    ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
-
-                    System.out.println("Running playAllGamesTask");
-                    playAllGames();
-                    System.out.println("Completed playAllGamesTask at: " + LocalDateTime.now());
-                    logger.info("Completed playAllGamesTask at: " + LocalDateTime.now());
-                } catch (InterruptedException e) {
-                    logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
-                }
-            }
-        };
-        scheduler.scheduleAtFixedRate(playAllGamesTask, 0, 56, TimeUnit.MINUTES);
-        System.out.println("MoonBix automation task scheduled to run every hour.");
+            System.out.println("Running playAllGamesTask");
+            playAllGames();
+            System.out.println("Completed playAllGamesTask at: " + LocalDateTime.now());
+            logger.info("Completed playAllGamesTask at: " + LocalDateTime.now());
+            driver.quit();
+        } catch (InterruptedException e) {
+            logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
+        }
     }
-
 
 
     public void goToGame() throws InterruptedException {
@@ -103,7 +97,7 @@ public class MoonbixTest {
                 }
             }
         };
-        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap-150 , TimeUnit.MILLISECONDS);
+        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap - 150, TimeUnit.MILLISECONDS);
 
         try {
             // Chờ cho đến khi scheduler hoàn thành hoặc hết thời gian chờ
@@ -167,34 +161,35 @@ public class MoonbixTest {
     }
 
 
-
-
-
-    public boolean remainingGameAttempts(){
+    public boolean remainingGameAttempts() {
         return true;
     }
-    public void clickHomeWidget(){
+
+    public void clickHomeWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath));
 
     }
-    public void byPassYourDailyRecordScreen(){
-        if(AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)){
+
+    public void byPassYourDailyRecordScreen() {
+        if (AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)) {
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath));
         }
         System.out.println("passed Your Daily Record screen");
     }
+
     public void checkLeaderBoardWidget() throws InterruptedException {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.leaderboardWidgetXpath));
         Thread.sleep(1);
-        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofMillis(700) );
-        ActionsUtils.swipe(x, y+200, x, y-200, Duration.ofMillis(700) );
-        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofMillis(700) );
-        ActionsUtils.swipe(x, y-200, x, y+200, Duration.ofMillis(700) );
+        ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
+        ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
+        ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
+        ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
     }
+
     public void checkTasksWidget() throws InterruptedException {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.taskWidgetXpath));
 
-        if(AndroidDriverUtils.isElementXpathExist(Data.unfinishedTasksListXpath)) {
+        if (AndroidDriverUtils.isElementXpathExist(Data.unfinishedTasksListXpath)) {
             List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
             for (WebElement task : tasks) {
                 ActionsUtils.tapElement(task);
@@ -204,10 +199,12 @@ public class MoonbixTest {
         }
         System.out.println("tasks done");
     }
-    public void checkFriendsWidget(){
+
+    public void checkFriendsWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath));
     }
-    public void checkSurpriseWidget(){
+
+    public void checkSurpriseWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
 
     }

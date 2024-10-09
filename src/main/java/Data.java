@@ -2,7 +2,7 @@ public class Data {
 
     //Telegram config
     private static final Integer moonbixIndex = 2;
-    public static final String deviceId = "emulator-5556";
+    public static final String deviceId = "emulator-5554";
 //    public static final String deviceId = "RFCW502F4BR";
 //    public static final String appActivity = "org.telegram.messenger.DefaultIcon";
     public static final String appActivity = ".DefaultIcon";
