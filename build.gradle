@@ -20,7 +20,45 @@ test {
     useJUnitPlatform()
 }
 
-task run(type: JavaExec) {
+tasks.register('startEmulator', Exec) {
+    def osName = System.getProperty('os.name').toLowerCase()
+    if (osName.contains('windows')) {
+        commandLine 'cmd', '/c', 'emulator -avd <emulator_name> > logs\\emulator.log 2>&1'
+    } else {
+        commandLine 'sh', '-c', 'emulator -avd <emulator_name> > logs/emulator.log 2>&1 &'
+    }
+}
+
+tasks.register('startAppium', Exec) {
+    def osName = System.getProperty('os.name').toLowerCase()
+    if (osName.contains('windows')) {
+        commandLine 'cmd', '/c', 'appium > logs\\appium.log 2>&1'
+    } else {
+        commandLine 'sh', '-c', 'appium > logs/appium.log 2>&1 &'
+    }
+}
+
+tasks.register('runAutomationScript', JavaExec) {
+    dependsOn 'startEmulator', 'startAppium'
     classpath = sourceSets.main.runtimeClasspath
     main = 'MoonbixTest'
+    doFirst {
+        println 'Waiting for emulator to boot...'
+        def osName = System.getProperty('os.name').toLowerCase()
+        if (osName.contains('windows')) {
+            exec {
+                commandLine 'cmd', '/c', 'adb wait-for-device'
+            }
+        } else {
+            exec {
+                commandLine 'sh', '-c', 'adb wait-for-device'
+            }
+        }
+        Thread.sleep(10000)
+    }
 }
+
+tasks.register('run') {
+    dependsOn 'runAutomationScript'
+}
+
