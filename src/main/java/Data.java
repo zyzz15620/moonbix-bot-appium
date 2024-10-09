@@ -1,12 +1,8 @@
 public class Data {
-
     //Telegram config
     private static final Integer moonbixIndex = 2;
-    public static final String deviceId = "emulator-5554";
-//    public static final String deviceId = "RFCW502F4BR";
-//    public static final String appActivity = "org.telegram.messenger.DefaultIcon";
+    public static final String deviceId = "emulator-5554"; //RFCW502F4BR || emulator-5554 || emulator-5556
     public static final String appActivity = ".DefaultIcon";
-//    public static final String appPackage = "org.telegram.messenger.web";
     public static final String appPackage = "org.telegram.messenger";
 
     //Go to game
@@ -32,10 +28,8 @@ public class Data {
     //Post game
     public static final String playAgainXpath = "//android.widget.Button[contains(@text, \"Play Again\")]"; //(//android.widget.Button)[1]
     public static final String shareWithFiends = "//android.widget.Button[@text=\"Share with Friends\"]"; //(//android.widget.Button)[1]
-
     public static final String shareWithFriendsXpath = "//android.widget.Button[@text=\"Share with Friends\"]"; //(//android.widget.Button)[2]
     public static final String continueXpath = "//android.widget.Button[@text=\"Continue\"]"; //(//android.widget.Button)[2]
-
     public static final String backToHomeXpath = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View/android.view.View/android.widget.Image";
     public static final String scoreXpath = "//android.widget.Image[@text='token']/preceding-sibling::android.widget.TextView";
 

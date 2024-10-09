@@ -1,4 +1,3 @@
-import io.appium.java_client.android.AndroidDriver;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
@@ -6,6 +5,7 @@ import org.openqa.selenium.WebElement;
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,16 +14,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MoonbixTest {
-    AndroidDriver driver;
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final Logger logger = Logger.getLogger(MoonbixTest.class.getName());
     private final static int delayTap = 2000;
     private static int x, y;
+    private static final int maximumTimeAGame = 2;
 
     int tapCount = 0;
 
-    public static void main(String[] args) throws InterruptedException, MalformedURLException {
+    public static void main(String[] args){
         MoonbixTest test = new MoonbixTest();
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -35,14 +35,13 @@ public class MoonbixTest {
     }
 
     public void moonbixAuto() throws InterruptedException, MalformedURLException {
-        driver = AndroidDriverUtils.getAndroidDriver();
+        AndroidDriverUtils.getAndroidDriver();
         x = AndroidDriverUtils.middleScreenLocation.get("x");
         y = AndroidDriverUtils.middleScreenLocation.get("y");
-        System.out.println("Driver setup complete for MoonBix.");
+        logger.info("Driver set-up complete at: " + getTimeNow());
 
         try {
-            System.out.println("Starting playAllGamesTask at: " + LocalDateTime.now());
-            logger.info("Starting playAllGamesTask at: " + LocalDateTime.now());
+            logger.info("Running goToGame()... at: " + getTimeNow());
 
             goToGame();
             byPassYourDailyRecordScreen();
@@ -54,14 +53,17 @@ public class MoonbixTest {
             clickHomeWidget();
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
 
-            System.out.println("Running playAllGamesTask");
+            logger.info("Running playAllGames()...");
             playAllGames();
-            System.out.println("Completed playAllGamesTask at: " + LocalDateTime.now());
-            logger.info("Completed playAllGamesTask at: " + LocalDateTime.now());
-            driver.quit();
+            logger.info("Completed playAllGamesTask");
+            AndroidDriverUtils.quitAndroidDriver();
         } catch (InterruptedException e) {
             logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
         }
+    }
+
+    private static String getTimeNow() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-M-yyyy HH:mm:ss"));
     }
 
 
@@ -71,64 +73,66 @@ public class MoonbixTest {
     }
 
 
-    private void playGame() throws InterruptedException {
+    private void playGame() {
         tapCount = 0;
-
         ScheduledExecutorService schedulerTap = Executors.newScheduledThreadPool(1);
-        System.out.println("Starting game with coordinates: " + x + ", " + y);
+        Runnable tapTask = getRunnable(schedulerTap);
+        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap - 150, TimeUnit.MILLISECONDS);
+        checkIfAGameTookToLong(schedulerTap);
+    }
 
-        Runnable tapTask = new Runnable() {
+    private static void checkIfAGameTookToLong(ScheduledExecutorService schedulerTap) {
+        try {
+            boolean terminated = schedulerTap.awaitTermination(maximumTimeAGame, TimeUnit.MINUTES);
+            if (!terminated) {
+                logger.log(Level.WARNING, "The game did not finish in " + maximumTimeAGame + " minutes" );
+                schedulerTap.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "Error occurred during termination waiting: " + e.getMessage());
+            e.printStackTrace();
+            schedulerTap.shutdownNow();
+            Thread.currentThread().interrupt();  // Khôi phục trạng thái gián đoạn
+        }
+    }
+
+    private Runnable getRunnable(ScheduledExecutorService schedulerTap) {
+        return new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (tapCount >= 25) {
-                        System.out.println("Finished after " + tapCount + " taps.");
+                    if (tapCount >= 50/((delayTap)/1000)) { //each game has 50s to play so number of taps is around 50/delayTap
+                        logger.info("Finished a game after " + tapCount + " taps.");
                         schedulerTap.shutdown();
                         return;
                     }
                     ActionsUtils.tapAtCoordinates(x, y);
-                    System.out.println("tapAtCoordinates: " + x + ", " + y);
                     tapCount++;
-                    System.out.println("Tap #" + tapCount);
+                    logger.info("Tap #" + tapCount + " performed");
                 } catch (Exception e) {
-                    System.out.println("Error occurred during tapping: " + e.getMessage());
+                    logger.log(Level.SEVERE, "Error occurred during tapping: " + e.getMessage() );
                     e.printStackTrace();
                     schedulerTap.shutdown();
                 }
             }
         };
-        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap - 150, TimeUnit.MILLISECONDS);
-
-        try {
-            // Chờ cho đến khi scheduler hoàn thành hoặc hết thời gian chờ
-            boolean terminated = schedulerTap.awaitTermination(2, TimeUnit.MINUTES);
-            if (!terminated) {
-                System.out.println("The scheduled taps did not finish in the expected time.");
-                schedulerTap.shutdownNow();  // Tắt ngay nếu hết thời gian chờ
-            }
-        } catch (InterruptedException e) {
-            System.out.println("Error occurred during termination waiting: " + e.getMessage());
-            e.printStackTrace();
-            schedulerTap.shutdownNow();  // Đảm bảo scheduler được tắt nếu gặp lỗi
-            Thread.currentThread().interrupt();  // Khôi phục trạng thái gián đoạn
-        }
     }
 
     public void playAllGames() throws InterruptedException {
         for (int i = 0; i < 6; i++) {
-            System.out.println("Starting game #" + (i + 1));
+            logger.info("Starting game #" + (i + 1));
             playGame();
-            System.out.println("Game #" + (i + 1) + " finished.");
+            logger.info("Game #" + (i + 1) + " finished.");
 
             boolean buttonClicked = false;
             int retryCount = 0;
             int maxRetries = 5;
-            long retryDelay = 2000; // Thời gian chờ 2 giây giữa mỗi lần kiểm tra
+            long retryDelay = 2000;
 
             while (!buttonClicked && retryCount < maxRetries) {
                 try {
                     if (AndroidDriverUtils.isElementXpathExist(Data.playAgainXpath)) {
-                        System.out.println("Play Again button is visible after game #" + (i + 1) + ", clicking...");
+                        logger.info("Play Again button still visible after game #" + (i + 1) + ", clicking...");
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.playAgainXpath));
                         buttonClicked = true;
                         break;
@@ -137,44 +141,39 @@ public class MoonbixTest {
                     else if (AndroidDriverUtils.isElementXpathExist("(//android.widget.Button)[2]")) {
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]"));
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.goBackXpath));
-                        System.out.println("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
+                        logger.info("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
                         return;
                     } else {
-                        System.out.println("No relevant button (Play Again or Continue) found after game #" + (i + 1));
+                        logger.log(Level.WARNING ,"No relevant button (Play Again or Continue) found after game #" + (i + 1));
                         break;  // Không có nút nào hiện ra, thoát vòng lặp while
                     }
                 } catch (NoSuchElementException e) {
-                    System.out.println("Retry #" + retryCount + " for game #" + (i + 1) + ": Element not found.");
+                    logger.log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Element not found.");
                 } catch (TimeoutException e) {
-                    System.out.println("Retry #" + retryCount + " for game #" + (i + 1) + ": Timeout while waiting for element.");
+                    logger.log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Timeout while waiting for element.");
                 } catch (Exception e) {
-                    System.out.println("Unexpected error during retry #" + retryCount + " for game #" + (i + 1) + ": " + e.getMessage());
+                    logger.log(Level.SEVERE, "Unexpected error during retry #" + retryCount + " for game #" + (i + 1) + ": " + e.getMessage());
                     e.printStackTrace();
                 }
                 retryCount++;
                 Thread.sleep(retryDelay);
             }
             if (!buttonClicked) {
-                System.out.println("No button was clicked after retrying " + maxRetries + " times for game #" + (i + 1) + ".");
+                logger.log(Level.WARNING, "No button was clicked after retrying " + maxRetries + " times for game #" + (i + 1) + ".");
             }
         }
     }
 
-
-    public boolean remainingGameAttempts() {
-        return true;
-    }
-
     public void clickHomeWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath));
-
+        logger.info("Go to Home screen");
     }
 
     public void byPassYourDailyRecordScreen() {
         if (AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)) {
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath));
         }
-        System.out.println("passed Your Daily Record screen");
+        logger.info("Daily Record screen checked");
     }
 
     public void checkLeaderBoardWidget() throws InterruptedException {
@@ -184,6 +183,7 @@ public class MoonbixTest {
         ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
+        logger.info("Leaderboard checked");
     }
 
     public void checkTasksWidget() throws InterruptedException {
@@ -197,15 +197,17 @@ public class MoonbixTest {
                 ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(700));
             }
         }
-        System.out.println("tasks done");
+        logger.info("Tasks checked");
+
     }
 
     public void checkFriendsWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath));
+        logger.info("Friends checked");
     }
 
     public void checkSurpriseWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
-
+        logger.info("Surprise checked");
     }
 }
