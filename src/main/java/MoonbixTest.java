@@ -2,6 +2,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,13 +28,14 @@ public class MoonbixTest {
 
     public static void main(String[] args){
         MoonbixTest test = new MoonbixTest();
+        setupLogger();
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 test.moonbixAuto();
             } catch (InterruptedException | MalformedURLException e) {
                 logger.log(Level.SEVERE, "Exception occurred while running moonbixAuto", e);
             }
-        }, 0, 55, TimeUnit.MINUTES);
+        }, 0, 60, TimeUnit.MINUTES);
     }
 
     public void moonbixAuto() throws InterruptedException, MalformedURLException {
@@ -210,4 +214,24 @@ public class MoonbixTest {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
         logger.info("Surprise checked");
     }
+    private static void setupLogger() {
+        try {
+            // Thiết lập ConsoleHandler để ghi log ra console
+            ConsoleHandler consoleHandler = new ConsoleHandler();
+            consoleHandler.setLevel(Level.ALL);
+            logger.addHandler(consoleHandler);
+
+            // Thiết lập FileHandler để ghi log vào file
+            FileHandler fileHandler = new FileHandler("logs/logger.log", true);
+            fileHandler.setLevel(Level.ALL);
+            logger.addHandler(fileHandler);
+
+            logger.setLevel(Level.ALL);  // Ghi tất cả các log
+            logger.setUseParentHandlers(false);  // Tắt log mặc định để tránh in lặp lại
+
+        } catch (IOException e) {
+            System.err.println("Error setting up logger: " + e.getMessage());
+        }
+    }
+
 }

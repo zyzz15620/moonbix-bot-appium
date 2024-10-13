@@ -23,9 +23,9 @@ test {
 tasks.register('startEmulator', Exec) {
     def osName = System.getProperty('os.name').toLowerCase()
     if (osName.contains('windows')) {
-        commandLine 'cmd', '/c', 'emulator -avd <emulator_name> > logs\\emulator.log 2>&1'
+        commandLine 'cmd', '/c', 'emulator -avd API33Pixel4 > logs\\emulator.log 2>&1'
     } else {
-        commandLine 'sh', '-c', 'emulator -avd <emulator_name> > logs/emulator.log 2>&1 &'
+        commandLine 'sh', '-c', 'emulator -avd API33Pixel4 > logs/emulator.log 2>&1 &'
     }
 }
 
