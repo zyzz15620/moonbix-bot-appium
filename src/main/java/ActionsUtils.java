@@ -8,9 +8,11 @@ import java.net.MalformedURLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.logging.Logger;
 
 public class ActionsUtils {
     private static final AndroidDriver driver;
+    private static final Logger logger = AndroidDriverUtils.getLogger();
 
     static {
         try {

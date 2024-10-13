@@ -16,7 +16,6 @@ import java.util.logging.*;
 public class MoonbixTest {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private static final Logger logger = Logger.getLogger(MoonbixTest.class.getName());
     private final static int delayTap = 2000;
     private static int x, y;
     private static final int maximumTimeAGame = 2;
@@ -29,7 +28,7 @@ public class MoonbixTest {
             try {
                 test.moonbixAuto();
             } catch (InterruptedException | MalformedURLException e) {
-                logger.log(Level.SEVERE, "Exception occurred while running moonbixAuto", e);
+                AndroidDriverUtils.getLogger().log(Level.SEVERE, "Exception occurred while running moonbixAuto", e);
             }
         }, 0, 60, TimeUnit.MINUTES);
     }
@@ -38,10 +37,10 @@ public class MoonbixTest {
         AndroidDriverUtils.getAndroidDriver();
         x = AndroidDriverUtils.middleScreenLocation.get("x");
         y = AndroidDriverUtils.middleScreenLocation.get("y");
-        logger.info("Driver set-up complete.");
+        AndroidDriverUtils.getLogger().info("Driver set-up complete.");
 
         try {
-            logger.info("Running goToGame()... ");
+            AndroidDriverUtils.getLogger().info("Running goToGame()... ");
 
             goToGame();
             byPassYourDailyRecordScreen();
@@ -53,19 +52,18 @@ public class MoonbixTest {
             clickHomeWidget();
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
 
-            logger.info("Running playAllGames()...");
+            AndroidDriverUtils.getLogger().info("Running playAllGames()...");
             playAllGames();
-            logger.info("Completed playAllGamesTask.");
+            AndroidDriverUtils.getLogger().info("Completed playAllGamesTask.");
             AndroidDriverUtils.quitAndroidDriver();
         } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "Exception in playAllGamesTask.", e);
+            AndroidDriverUtils.getLogger().log(Level.SEVERE, "Exception in playAllGamesTask.", e);
         }
     }
 
     private static String getTimeNow() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-M-yyyy HH:mm:ss"));
     }
-
 
     public void goToGame() throws InterruptedException {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.chatXpath));
@@ -85,11 +83,11 @@ public class MoonbixTest {
         try {
             boolean terminated = schedulerTap.awaitTermination(maximumTimeAGame, TimeUnit.MINUTES);
             if (!terminated) {
-                logger.log(Level.WARNING, "The game did not finish in " + maximumTimeAGame + " minutes" );
+                AndroidDriverUtils.getLogger().log(Level.WARNING, "The game did not finish in " + maximumTimeAGame + " minutes" );
                 schedulerTap.shutdownNow();
             }
         } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "Error occurred during termination waiting: " + e.getMessage());
+            AndroidDriverUtils.getLogger().log(Level.WARNING, "Error occurred during termination waiting: " + e.getMessage());
             e.printStackTrace();
             schedulerTap.shutdownNow();
             Thread.currentThread().interrupt();  // Khôi phục trạng thái gián đoạn
@@ -102,15 +100,15 @@ public class MoonbixTest {
             public void run() {
                 try {
                     if (tapCount >= 50/((delayTap)/1000)) { //each game has 50s to play so number of taps is around 50/delayTap
-                        logger.info("Finished a game after " + tapCount + " taps.");
+                        AndroidDriverUtils.getLogger().info("Finished a game after " + tapCount + " taps.");
                         schedulerTap.shutdown();
                         return;
                     }
                     ActionsUtils.tapAtCoordinates(x, y);
                     tapCount++;
-                    logger.info("Tap #" + tapCount + " performed");
+                    AndroidDriverUtils.getLogger().info("Tap #" + tapCount + " performed");
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Error occurred during tapping: " + e.getMessage() );
+                    AndroidDriverUtils.getLogger().log(Level.SEVERE, "Error occurred during tapping: " + e.getMessage() );
                     e.printStackTrace();
                     schedulerTap.shutdown();
                 }
@@ -120,9 +118,9 @@ public class MoonbixTest {
 
     public void playAllGames() throws InterruptedException {
         for (int i = 0; i < 6; i++) {
-            logger.info("Starting game #" + (i + 1));
+            AndroidDriverUtils.getLogger().info("Starting game #" + (i + 1));
             playGame();
-            logger.info("Game #" + (i + 1) + " finished.");
+            AndroidDriverUtils.getLogger().info("Game #" + (i + 1) + " finished.");
 
             boolean buttonClicked = false;
             int retryCount = 0;
@@ -132,7 +130,7 @@ public class MoonbixTest {
             while (!buttonClicked && retryCount < maxRetries) {
                 try {
                     if (AndroidDriverUtils.isElementXpathExist(Data.playAgainXpath)) {
-                        logger.info("Play Again button still visible after game #" + (i + 1) + ", clicking...");
+                        AndroidDriverUtils.getLogger().info("Play Again button still visible after game #" + (i + 1) + ", clicking...");
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.playAgainXpath));
                         buttonClicked = true;
                         break;
@@ -141,39 +139,39 @@ public class MoonbixTest {
                     else if (AndroidDriverUtils.isElementXpathExist("(//android.widget.Button)[2]")) {
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath("(//android.widget.Button)[2]"));
                         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.goBackXpath));
-                        logger.info("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
+                        AndroidDriverUtils.getLogger().info("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
                         return;
                     } else {
-                        logger.log(Level.WARNING ,"No relevant button (Play Again or Continue) found after game #" + (i + 1));
+                        AndroidDriverUtils.getLogger().log(Level.WARNING ,"No relevant button (Play Again or Continue) found after game #" + (i + 1));
                         break;  // Không có nút nào hiện ra, thoát vòng lặp while
                     }
                 } catch (NoSuchElementException e) {
-                    logger.log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Element not found.");
+                    AndroidDriverUtils.getLogger().log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Element not found.");
                 } catch (TimeoutException e) {
-                    logger.log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Timeout while waiting for element.");
+                    AndroidDriverUtils.getLogger().log(Level.WARNING, "Retry #" + retryCount + " for game #" + (i + 1) + ": Timeout while waiting for element.");
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Unexpected error during retry #" + retryCount + " for game #" + (i + 1) + ": " + e.getMessage());
+                    AndroidDriverUtils.getLogger().log(Level.SEVERE, "Unexpected error during retry #" + retryCount + " for game #" + (i + 1) + ": " + e.getMessage());
                     e.printStackTrace();
                 }
                 retryCount++;
                 Thread.sleep(retryDelay);
             }
             if (!buttonClicked) {
-                logger.log(Level.WARNING, "No button was clicked after retrying " + maxRetries + " times for game #" + (i + 1) + ".");
+                AndroidDriverUtils.getLogger().log(Level.WARNING, "No button was clicked after retrying " + maxRetries + " times for game #" + (i + 1) + ".");
             }
         }
     }
 
     public void clickHomeWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.gameWidgetXpath));
-        logger.info("Go to Home screen");
+        AndroidDriverUtils.getLogger().info("Go to Home screen");
     }
 
     public void byPassYourDailyRecordScreen() {
         if (AndroidDriverUtils.isElementXpathExist(Data.yourDailyRecordXpath)) {
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.continueButtonXpath));
         }
-        logger.info("Daily Record screen checked");
+        AndroidDriverUtils.getLogger().info("Daily Record screen checked");
     }
 
     public void checkLeaderBoardWidget() throws InterruptedException {
@@ -183,7 +181,7 @@ public class MoonbixTest {
         ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
-        logger.info("Leaderboard checked");
+        AndroidDriverUtils.getLogger().info("Leaderboard checked");
     }
 
     public void checkTasksWidget() throws InterruptedException {
@@ -197,19 +195,17 @@ public class MoonbixTest {
                 ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(700));
             }
         }
-        logger.info("Tasks checked");
+        AndroidDriverUtils.getLogger().info("Tasks checked");
 
     }
 
     public void checkFriendsWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.friendsWidgetXpath));
-        logger.info("Friends checked");
+        AndroidDriverUtils.getLogger().info("Friends checked");
     }
 
     public void checkSurpriseWidget() {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
-        logger.info("Surprise checked");
+        AndroidDriverUtils.getLogger().info("Surprise checked");
     }
-
-
 }
