@@ -4,26 +4,31 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
+
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ActionsUtils {
     private static final AndroidDriver driver;
-    private static final Logger logger = AndroidDriverUtils.getLogger();
+    private static final Logger logger = DriverLogger.getLogger();
+
 
     static {
         try {
             driver = AndroidDriverUtils.getAndroidDriver();
         } catch (MalformedURLException e) {
+            logger.log(Level.SEVERE, "Error initializing AndroidDriver", e);
             throw new RuntimeException(e);
         }
     }
 
     public static Point getElementCenter(WebElement element) {
         if (element == null) {
+            logger.severe("Element cannot be null");
             throw new IllegalArgumentException("Element cannot be null");
         }
 
@@ -35,35 +40,41 @@ public class ActionsUtils {
 
     private static void validateCoordinates(int x, int y) {
         if (x == 0 && y == 0) {
+            logger.warning("Invalid coordinates: both x and y are zero");
             throw new IllegalArgumentException("Invalid coordinates: both x and y are zero");
         }
     }
 
     public static void tapElement(WebElement element, Duration duration) {
         if (element == null) {
+            logger.severe("Element is null. Cannot perform tap.");
             throw new IllegalArgumentException("Element cannot be null");
         }
         Point center = getElementCenter(element);
         int x = center.getX();
         int y = center.getY();
         validateCoordinates(x, y);
+        logger.info("Tapping element at coordinates: (" + x + ", " + y + ")");
         executeTap(x, y, duration);
     }
 
     public static void tapElement(WebElement element) {
         if (element == null) {
+            logger.severe("Element is null. Cannot perform tap.");
             throw new IllegalArgumentException("Element cannot be null");
         }
         Point center = getElementCenter(element);
         int x = center.getX();
         int y = center.getY();
         validateCoordinates(x, y);
+        logger.info("Tapping element at coordinates: (" + x + ", " + y + ")");
         executeTap(x, y, Duration.ofMillis(150));
     }
 
     public static void tapAtCoordinates(int x, int y) {
         try {
             validateCoordinates(x, y);
+            logger.info("Tapping at coordinates: (" + x + ", " + y + ")");
             executeTap(x, y, Duration.ofMillis(150));
         } catch (Exception e) {
             handleException(e, "tapping at coordinates");
@@ -73,6 +84,7 @@ public class ActionsUtils {
     public static void longPressAtCoordinates(int x, int y, Duration duration) {
         try {
             validateCoordinates(x, y);
+            logger.info("Long pressing at coordinates: (" + x + ", " + y + ")");
             executeTap(x, y, duration);
         } catch (Exception e) {
             handleException(e, "long pressing at coordinates");
@@ -90,7 +102,7 @@ public class ActionsUtils {
             swipeSequence.addAction(finger.createPointerMove(duration, PointerInput.Origin.viewport(), endX, endY));
             swipeSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
             driver.perform(Collections.singletonList(swipeSequence));
-            System.out.println("Swipe performed from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")");
+            logger.info("Swipe performed from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")");
         } catch (Exception e) {
             handleException(e, "swiping from point to point");
         }
@@ -99,6 +111,7 @@ public class ActionsUtils {
     public static void doubleTap(int x, int y) {
         try {
             validateCoordinates(x, y);
+            logger.info("Double tapping at coordinates: (" + x + ", " + y + ")");
             executeTap(x, y, Duration.ofMillis(50));
             executeTap(x, y, Duration.ofMillis(50));
         } catch (Exception e) {
@@ -109,8 +122,8 @@ public class ActionsUtils {
     public static void pinch(int centerX, int centerY, int distance, Duration duration) {
         try {
             validateCoordinates(centerX, centerY);
+            logger.info("Pinching at center (" + centerX + "," + centerY + ") with distance: " + distance);
             multiTouch(centerX, centerY, centerX, centerY - distance, centerX, centerY + distance, duration);
-            System.out.println("Pinch performed at center (" + centerX + "," + centerY + ")");
         } catch (Exception e) {
             handleException(e, "pinching at coordinates");
         }
@@ -119,8 +132,8 @@ public class ActionsUtils {
     public static void zoom(int centerX, int centerY, int distance, Duration duration) {
         try {
             validateCoordinates(centerX, centerY);
+            logger.info("Zooming at center (" + centerX + "," + centerY + ") with distance: " + distance);
             multiTouch(centerX, centerY, centerX, centerY, centerX, centerY, duration);
-            System.out.println("Zoom performed at center (" + centerX + "," + centerY + ")");
         } catch (Exception e) {
             handleException(e, "zooming at coordinates");
         }
@@ -130,6 +143,7 @@ public class ActionsUtils {
         try {
             validateCoordinates(startX, startY);
             validateCoordinates(endX, endY);
+            logger.info("Dragging from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")");
             PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
             Sequence dragSequence = new Sequence(finger, 1);
             dragSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY));
@@ -138,7 +152,6 @@ public class ActionsUtils {
             dragSequence.addAction(finger.createPointerMove(duration, PointerInput.Origin.viewport(), endX, endY));
             dragSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
             driver.perform(Collections.singletonList(dragSequence));
-            System.out.println("Drag performed from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")");
         } catch (Exception e) {
             handleException(e, "dragging from point to point");
         }
@@ -153,7 +166,7 @@ public class ActionsUtils {
         tapSequence.addAction(new Pause(finger, duration));
         tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         driver.perform(Collections.singletonList(tapSequence));
-        System.out.println("Tap performed at coordinates: " + x + ", " + y);
+        logger.info("Tap performed at coordinates: (" + x + ", " + y + ")");               //vấn đề đang ở đây
     }
 
     private static void multiTouch(int centerX, int centerY, int startX1, int startY1, int startX2, int startY2, Duration duration) {
@@ -173,13 +186,6 @@ public class ActionsUtils {
     }
 
     private static void handleException(Exception e, String action) {
-        System.out.println("Error while " + action + ": " + e.getMessage());
-        e.printStackTrace();
+        logger.log(Level.SEVERE, "Error while " + action, e);
     }
 }
-//Tap: 100ms đến 150ms.
-//Long Press: 500ms đến 800ms.
-//Swipe: 400ms đến 600ms.
-//Double Tap: 150ms đến 250ms (giữa hai lần chạm).
-//Delay giữa các hành động: 500ms đến 1 giây.
-//Tính ngẫu nhiên: Thêm khoảng thời gian ngẫu nhiên giữa các thao tác.

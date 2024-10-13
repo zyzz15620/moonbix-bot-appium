@@ -20,9 +20,7 @@ public class AndroidDriverUtils {
     private static AndroidDriver driver;
     private static WebDriverWait webDriverWait;
     public static Map<String, Integer> middleScreenLocation;
-    private static final Logger logger = Logger.getLogger(AndroidDriverUtils.class.getName());
-    //Initialize logger here because AndroidDriverUtils will be initialized multiple times, and logger can log all games
-    //If I only want to log the latest 6 games then initialize logger in getAndroidDriver()
+    private static final Logger logger = DriverLogger.getLogger();
 
     public static AndroidDriver getAndroidDriver() throws MalformedURLException {
         if(driver==null){
@@ -34,7 +32,6 @@ public class AndroidDriverUtils {
             middleScreenLocation = new HashMap<>();
             middleScreenLocation.put("x", driver.manage().window().getSize().width/2);
             middleScreenLocation.put("y", driver.manage().window().getSize().height/2);
-            setupLogger();
         }
         return driver;
     }
@@ -116,31 +113,5 @@ public class AndroidDriverUtils {
         catch (Exception e) {
             return false;
         }
-    }
-
-    private static void setupLogger() {
-        try {
-            // Thiết lập ConsoleHandler để ghi log ra console
-            ConsoleHandler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            consoleHandler.setLevel(Level.ALL);
-            logger.addHandler(consoleHandler);
-
-            // Thiết lập FileHandler để ghi log vào file
-            FileHandler fileHandler = new FileHandler("logs/logger.log", true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            fileHandler.setLevel(Level.ALL);
-            logger.addHandler(fileHandler);
-
-            logger.setLevel(Level.ALL);  // Ghi tất cả các log
-            logger.setUseParentHandlers(false);  // Tắt log mặc định để tránh in lặp lại
-
-        } catch (IOException e) {
-            System.err.println("Error setting up logger: " + e.getMessage());
-        }
-    }
-
-    public static Logger getLogger() {
-        return logger;
     }
 }
