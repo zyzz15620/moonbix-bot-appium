@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 public class MoonbixTest {
 
@@ -28,7 +25,6 @@ public class MoonbixTest {
 
     public static void main(String[] args){
         MoonbixTest test = new MoonbixTest();
-        setupLogger();
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 test.moonbixAuto();
@@ -42,10 +38,10 @@ public class MoonbixTest {
         AndroidDriverUtils.getAndroidDriver();
         x = AndroidDriverUtils.middleScreenLocation.get("x");
         y = AndroidDriverUtils.middleScreenLocation.get("y");
-        logger.info("Driver set-up complete at: " + getTimeNow());
+        logger.info("Driver set-up complete.");
 
         try {
-            logger.info("Running goToGame()... at: " + getTimeNow());
+            logger.info("Running goToGame()... ");
 
             goToGame();
             byPassYourDailyRecordScreen();
@@ -59,10 +55,10 @@ public class MoonbixTest {
 
             logger.info("Running playAllGames()...");
             playAllGames();
-            logger.info("Completed playAllGamesTask");
+            logger.info("Completed playAllGamesTask.");
             AndroidDriverUtils.quitAndroidDriver();
         } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "Exception in playAllGamesTask", e);
+            logger.log(Level.SEVERE, "Exception in playAllGamesTask.", e);
         }
     }
 
@@ -214,24 +210,6 @@ public class MoonbixTest {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.surpriseWidgetXpath));
         logger.info("Surprise checked");
     }
-    private static void setupLogger() {
-        try {
-            // Thiết lập ConsoleHandler để ghi log ra console
-            ConsoleHandler consoleHandler = new ConsoleHandler();
-            consoleHandler.setLevel(Level.ALL);
-            logger.addHandler(consoleHandler);
 
-            // Thiết lập FileHandler để ghi log vào file
-            FileHandler fileHandler = new FileHandler("logs/logger.log", true);
-            fileHandler.setLevel(Level.ALL);
-            logger.addHandler(fileHandler);
-
-            logger.setLevel(Level.ALL);  // Ghi tất cả các log
-            logger.setUseParentHandlers(false);  // Tắt log mặc định để tránh in lặp lại
-
-        } catch (IOException e) {
-            System.err.println("Error setting up logger: " + e.getMessage());
-        }
-    }
 
 }
