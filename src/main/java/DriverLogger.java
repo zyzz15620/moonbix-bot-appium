@@ -5,8 +5,8 @@ public class DriverLogger {
     private static Logger logger;
     private static final String loggerName = "telegram-mobile-auto";
 
-    public static Logger getLogger(){
-        if(logger == null) {
+    public static Logger getLogger() {
+        if (logger == null) {
             logger = Logger.getLogger(loggerName);
             setupLogger();
         }

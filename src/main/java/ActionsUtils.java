@@ -5,7 +5,6 @@ import org.openqa.selenium.interactions.Pause;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.Sequence;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,28 +12,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ActionsUtils {
-    private static final AndroidDriver driver;
     private static final Logger logger = DriverLogger.getLogger();
-
-
-    static {
-        try {
-            driver = AndroidDriverUtils.getAndroidDriver();
-        } catch (MalformedURLException e) {
-            logger.log(Level.SEVERE, "Error initializing AndroidDriver", e);
-            throw new RuntimeException(e);
-        }
-    }
 
     public static Point getElementCenter(WebElement element) {
         if (element == null) {
             logger.severe("Element cannot be null");
             throw new IllegalArgumentException("Element cannot be null");
         }
-
         int centerX = element.getLocation().getX() + (element.getSize().getWidth() / 2);
         int centerY = element.getLocation().getY() + (element.getSize().getHeight() / 2);
-
         return new Point(centerX, centerY);
     }
 
@@ -101,6 +87,7 @@ public class ActionsUtils {
             swipeSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
             swipeSequence.addAction(finger.createPointerMove(duration, PointerInput.Origin.viewport(), endX, endY));
             swipeSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+            AndroidDriver driver = AndroidDriverUtils.getAndroidDriver();
             driver.perform(Collections.singletonList(swipeSequence));
             logger.info("Swipe performed from (" + startX + "," + startY + ") to (" + endX + "," + endY + ")");
         } catch (Exception e) {
@@ -151,6 +138,7 @@ public class ActionsUtils {
             dragSequence.addAction(new Pause(finger, Duration.ofMillis(200)));
             dragSequence.addAction(finger.createPointerMove(duration, PointerInput.Origin.viewport(), endX, endY));
             dragSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+            AndroidDriver driver = AndroidDriverUtils.getAndroidDriver();
             driver.perform(Collections.singletonList(dragSequence));
         } catch (Exception e) {
             handleException(e, "dragging from point to point");
@@ -165,9 +153,11 @@ public class ActionsUtils {
         tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
         tapSequence.addAction(new Pause(finger, duration));
         tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        AndroidDriver driver = AndroidDriverUtils.getAndroidDriver();
         driver.perform(Collections.singletonList(tapSequence));
         logger.info("Tap performed at coordinates: (" + x + ", " + y + ")");               //vấn đề đang ở đây
     }
+
 
     private static void multiTouch(int centerX, int centerY, int startX1, int startY1, int startX2, int startY2, Duration duration) {
         PointerInput finger1 = new PointerInput(PointerInput.Kind.TOUCH, "finger1");
@@ -182,6 +172,7 @@ public class ActionsUtils {
         multiTouchSequence2.addAction(finger2.createPointerMove(duration, PointerInput.Origin.viewport(), centerX, centerY));
         multiTouchSequence1.addAction(finger1.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
         multiTouchSequence2.addAction(finger2.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+        AndroidDriver driver = AndroidDriverUtils.getAndroidDriver();
         driver.perform(Arrays.asList(multiTouchSequence1, multiTouchSequence2));
     }
 

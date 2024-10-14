@@ -1,12 +1,14 @@
 public class Data {
-    //Telegram config
+    //User config here
     private static final Integer moonbixIndex = 2;
     public static final String deviceId = "emulator-5554"; //RFCW502F4BR || emulator-5554 || emulator-5556
+
+    //Telegram package
     public static final String appActivity = ".DefaultIcon";
     public static final String appPackage = "org.telegram.messenger";
 
     //Go to game
-    public static  String chatXpath = "//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup["+ moonbixIndex +"]"; //need to change index
+    public static String chatXpath = "//androidx.recyclerview.widget.RecyclerView/android.view.ViewGroup[" + moonbixIndex + "]"; //need to change index
     public static final String startGameButtonId = "Bot menu";
     public static final String backButtonXpath = "(//android.widget.Image)[1]";
 
@@ -38,6 +40,4 @@ public class Data {
 
     //Tasks page
     public static final String unfinishedTasksListXpath = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View[android.widget.Image[3] and not(android.widget.Image[@text='check'])]";
-
-
 }

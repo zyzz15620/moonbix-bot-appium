@@ -2,8 +2,6 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.*;
+import java.util.logging.Level;
 
 public class MoonbixTest {
 
@@ -22,18 +20,18 @@ public class MoonbixTest {
 
     int tapCount = 0;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         MoonbixTest test = new MoonbixTest();
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 test.moonbixAuto();
-            } catch (InterruptedException | MalformedURLException e) {
+            } catch (InterruptedException e) {
                 DriverLogger.getLogger().log(Level.SEVERE, "Exception occurred while running moonbixAuto", e);
             }
         }, 0, 60, TimeUnit.MINUTES);
     }
 
-    public void moonbixAuto() throws InterruptedException, MalformedURLException {
+    public void moonbixAuto() throws InterruptedException {
         AndroidDriverUtils.getAndroidDriver();
         x = AndroidDriverUtils.middleScreenLocation.get("x");
         y = AndroidDriverUtils.middleScreenLocation.get("y");
@@ -48,7 +46,6 @@ public class MoonbixTest {
             checkFriendsWidget();
             checkSurpriseWidget();
             checkTasksWidget();
-
             clickHomeWidget();
             ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.PlayGameButtonXpath));
 
@@ -83,7 +80,7 @@ public class MoonbixTest {
         try {
             boolean terminated = schedulerTap.awaitTermination(maximumTimeAGame, TimeUnit.MINUTES);
             if (!terminated) {
-                DriverLogger.getLogger().log(Level.WARNING, "The game did not finish in " + maximumTimeAGame + " minutes" );
+                DriverLogger.getLogger().log(Level.WARNING, "The game did not finish in " + maximumTimeAGame + " minutes");
                 schedulerTap.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -99,7 +96,7 @@ public class MoonbixTest {
             @Override
             public void run() {
                 try {
-                    if (tapCount >= 50/((delayTap)/1000)) { //each game has 50s to play so number of taps is around 50/delayTap
+                    if (tapCount >= 50 / ((delayTap) / 1000)) { //each game has 50s to play so number of taps is around 50/delayTap
                         DriverLogger.getLogger().info("Finished a game after " + tapCount + " taps.");
                         schedulerTap.shutdown();
                         return;
@@ -108,7 +105,7 @@ public class MoonbixTest {
                     tapCount++;
                     DriverLogger.getLogger().info("Tap #" + tapCount + " performed");
                 } catch (Exception e) {
-                    DriverLogger.getLogger().log(Level.SEVERE, "Error occurred during tapping: " + e.getMessage() );
+                    DriverLogger.getLogger().log(Level.SEVERE, "Error occurred during tapping: " + e.getMessage());
                     e.printStackTrace();
                     schedulerTap.shutdown();
                 }
@@ -142,7 +139,7 @@ public class MoonbixTest {
                         DriverLogger.getLogger().info("Continue button is visible after game #" + (i + 1) + ", clicking Continue button and back to home");
                         return;
                     } else {
-                        DriverLogger.getLogger().log(Level.WARNING ,"No relevant button (Play Again or Continue) found after game #" + (i + 1));
+                        DriverLogger.getLogger().log(Level.WARNING, "No relevant button (Play Again or Continue) found after game #" + (i + 1));
                         break;  // Không có nút nào hiện ra, thoát vòng lặp while
                     }
                 } catch (NoSuchElementException e) {
