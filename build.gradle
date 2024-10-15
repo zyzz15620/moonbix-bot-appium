@@ -21,16 +21,43 @@ test {
     useJUnitPlatform()
 }
 
-tasks.register('startEmulator', Exec) {
-    def osName = System.getProperty('os.name').toLowerCase()
+def loadEnv(String filePath) {
+    def env = [:]
+    def envFile = file(filePath)
 
-    // Load the AVD name from environment variables (already loaded by the bash script or EnvConfig class)
-    def avdName = System.getenv("emulator_avd") ?: 'API33Pixel4'  // Fallback to 'API33Pixel4' if not found
-
-    if (osName.contains('windows')) {
-        commandLine 'cmd', '/c', "emulator -avd ${avdName} > logs\\emulator.log 2>&1"
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            def parts = line.split("=")
+            if (parts.size() == 2) {
+                env[parts[0].trim()] = parts[1].trim()
+            }
+        }
     } else {
-        commandLine 'sh', '-c', "emulator -avd ${avdName} > logs/emulator.log 2>&1 &"
+        println "local.env file not found at $filePath"
+    }
+    return env
+}
+
+tasks.register('startEmulator', Exec) {
+    doFirst {
+        println 'Starting Emulator...'
+
+        def osName = System.getProperty('os.name').toLowerCase()
+
+        // Load environment variables using Dotenv
+        def envVars = loadEnv("local.env")
+
+
+        // Load AVD name from .env file or default to 'API33Pixel4'
+        def avdName = envVars['emulator_avd'] ?: 'API33'
+
+        if (osName.contains('windows')) {
+            def emulatorPath = "C:/android_sdk/emulator/emulator.exe"
+            println "Running: ${emulatorPath} -avd ${avdName}"
+            commandLine 'cmd', '/c', "${emulatorPath} -avd ${avdName}"
+        } else {
+            commandLine 'sh', '-c', "emulator -avd ${avdName}"
+        }
     }
 }
 
