@@ -1,39 +1,74 @@
 #!/bin/bash
 
-# Khởi động emulator và lưu PID
+# Manually load variables from local.env without xargs
+if [ -f "./local.env" ]; then
+    while IFS='=' read -r key value; do
+        if [[ $key && $value ]]; then
+            # Remove any surrounding quotes from the value, just in case
+            value="${value%\"}"
+            value="${value#\"}"
+            export "$key=$value"
+        fi
+    done < "./local.env"
+else
+    echo "local.env file not found. Exiting."
+    exit 1
+fi
+
+# Start the emulator and save its PID
 ./gradlew startEmulator > logs/emulator.log 2>&1 &
 EMULATOR_PID=$!
+if [ -z "$EMULATOR_PID" ]; then
+    echo "Failed to start emulator. Exiting."
+    exit 1
+fi
 
-# Khởi động Appium và lưu PID
+# Start Appium and save its PID
 ./gradlew startAppium > logs/appium.log 2>&1 &
 APPIUM_PID=$!
+if [ -z "$APPIUM_PID" ]; then
+    echo "Failed to start Appium. Exiting."
+    exit 1
+fi
 
-# Hàm dọn dẹp để tắt Appium và Emulator khi script kết thúc
+# Function to clean up processes (Emulator and Appium) when the script finishes
 cleanup() {
-    echo "Stopping Emulator (PID: $EMULATOR_PID) and Appium (PID: $APPIUM_PID)..."
+    echo "Stopping Emulator ($device_UID) and Appium (PID: $APPIUM_PID)..."
 
-    # Kiểm tra và dừng Emulator nếu tiến trình còn tồn tại
-    if kill -0 $EMULATOR_PID 2>/dev/null; then
-        kill $EMULATOR_PID
-        echo "Emulator (PID: $EMULATOR_PID) đã được tắt."
+    # Check and stop Emulator using adb
+    if adb devices | grep "$device_UID" > /dev/null; then
+        adb -s "$device_UID" emu kill  # Stops the emulator gracefully
+        echo "Emulator stopped via adb."
     else
-        echo "Emulator (PID: $EMULATOR_PID) đã dừng trước đó."
+        echo "Emulator was already stopped."
     fi
 
-    # Kiểm tra và dừng Appium nếu tiến trình còn tồn tại
-    if kill -0 $APPIUM_PID 2>/dev/null; then
-        kill $APPIUM_PID
-        echo "Appium (PID: $APPIUM_PID) đã được tắt."
+    # Check and stop Appium if it's still running
+    if kill -0 "$APPIUM_PID" 2>/dev/null; then
+        pkill -TERM -P "$APPIUM_PID"
+        echo "Appium (PID: $APPIUM_PID) has been stopped."
     else
-        echo "Appium (PID: $APPIUM_PID) đã dừng trước đó."
+        echo "Appium (PID: $APPIUM_PID) was already stopped."
     fi
 }
 
-# Bắt tín hiệu Control + C (SIGINT) để dừng các tiến trình
+# Catch Ctrl+C (SIGINT) to stop the processes gracefully
 trap cleanup SIGINT
 
-# Chạy automation script và ghi log vào file, đồng thời hiển thị log trên terminal
-./gradlew run | tee logs/java.log
+# Wait for Emulator and Appium to fully start before running tests
+echo "Waiting for Emulator and Appium to start..."
+sleep 10  # This can be improved with actual health checks for readiness
 
-# Gọi hàm cleanup khi script kết thúc
+# Run automation tests and log the output, show logs in terminal as well
+./gradlew run | tee logs/java.log
+if [ $? -ne 0 ]; then
+    echo "Automation tests failed. Exiting."
+    cleanup
+    exit 1
+fi
+
+# Stop Gradle Daemon if it is running
+./gradlew --stop
+
+# Call the cleanup function when the script ends
 cleanup

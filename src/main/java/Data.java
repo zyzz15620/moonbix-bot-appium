@@ -1,7 +1,8 @@
 public class Data {
     //User config here
-    private static final Integer moonbixIndex = 2;
-    public static final String deviceId = "emulator-5554"; //RFCW502F4BR || emulator-5554 || emulator-5556
+    private static final Integer moonbixIndex = Integer.parseInt(EnvConfig.getDotEnv().get("moonbix_chat_index"));
+    public static final String deviceId = EnvConfig.getDotEnv().get("device_UID"); //RFCW502F4BR || emulator-5554 || emulator-5556
+    public static final Integer delayTap = Integer.parseInt(EnvConfig.getDotEnv().get("delay_milliseconds"));
 
     //Telegram package
     public static final String appActivity = ".DefaultIcon";
@@ -40,4 +41,8 @@ public class Data {
 
     //Tasks page
     public static final String unfinishedTasksListXpath = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View[android.widget.Image[3] and not(android.widget.Image[@text='check'])]";
+
+    //In-game
+    public static final String purpleStar = "//android.widget.Image[@text=\"star-purple\"]";
+    public static final String blueStar = "//android.widget.Image[@text=\"star-blue\"]";
 }

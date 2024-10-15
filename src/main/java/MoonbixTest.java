@@ -14,7 +14,6 @@ import java.util.logging.Level;
 public class MoonbixTest {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final static int delayTap = 2000;
     private static int x, y;
     private static final int maximumTimeAGame = 2;
 
@@ -72,7 +71,7 @@ public class MoonbixTest {
         tapCount = 0;
         ScheduledExecutorService schedulerTap = Executors.newScheduledThreadPool(1);
         Runnable tapTask = getRunnable(schedulerTap);
-        schedulerTap.scheduleAtFixedRate(tapTask, 0, delayTap - 150, TimeUnit.MILLISECONDS);
+        schedulerTap.scheduleAtFixedRate(tapTask, 0, Data.delayTap - 150, TimeUnit.MILLISECONDS);
         checkIfAGameTookToLong(schedulerTap);
     }
 
@@ -96,7 +95,7 @@ public class MoonbixTest {
             @Override
             public void run() {
                 try {
-                    if (tapCount >= 50 / ((delayTap) / 1000)) { //each game has 50s to play so number of taps is around 50/delayTap
+                    if (tapCount >= 50 / ((Data.delayTap) / 1000)) { //each game has 50s to play so number of taps is around 50/delayTap
                         DriverLogger.getLogger().info("Finished a game after " + tapCount + " taps.");
                         schedulerTap.shutdown();
                         return;
@@ -112,11 +111,62 @@ public class MoonbixTest {
             }
         };
     }
+    public void alertCaptcha(){
+        DriverLogger.getLogger().info("Captcha appeared");
+        SoundUtils.alert();
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //check if captcha still there or get solved
+    public void recheckCaptcha() {
+        int retryLimit = 3;  // Define how many times you want to retry captcha check
+        int retryCount = 0;
+
+        while (retryCount < retryLimit) {
+            if (AndroidDriverUtils.isElementXpathExist(Data.blueStar)) {
+                return;
+            } else {
+                DriverLogger.getLogger().info("Captcha failed, restarting the whole process...");
+                try {
+                    AndroidDriverUtils.quitAndroidDriver();
+                    Thread.sleep(5000);
+                    moonbixAuto();  // Retry the process
+                } catch (InterruptedException e) {
+                    DriverLogger.getLogger().log(Level.SEVERE, "Error occurred while repeating the process: ", e);
+                }
+            }
+            retryCount++;
+        }
+
+        if (retryCount >= retryLimit) {
+            DriverLogger.getLogger().log(Level.SEVERE, "Captcha recheck failed after " + retryLimit + " attempts. Exiting.");
+        }
+    }
+
+
+
+    public void checkCaptchaAppear(){
+        if (AndroidDriverUtils.isElementXpathExist(Data.blueStar)){
+            DriverLogger.getLogger().info("No captcha appear, running playGame()");
+            //game entered, no captcha appear
+            // do nothing and exist this checking method, continue playing
+            return;
+        } else {
+            alertCaptcha();
+            recheckCaptcha();
+        }
+    }
 
     public void playAllGames() throws InterruptedException {
         for (int i = 0; i < 6; i++) {
             DriverLogger.getLogger().info("Starting game #" + (i + 1));
+            checkCaptchaAppear();
             playGame();
+
             DriverLogger.getLogger().info("Game #" + (i + 1) + " finished.");
 
             boolean buttonClicked = false;
