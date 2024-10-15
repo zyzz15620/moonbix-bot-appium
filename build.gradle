@@ -38,6 +38,7 @@ def loadEnv(String filePath) {
     return env
 }
 
+// Task to start the emulator
 tasks.register('startEmulator', Exec) {
     doFirst {
         println 'Starting Emulator...'
@@ -46,7 +47,6 @@ tasks.register('startEmulator', Exec) {
 
         // Load environment variables using Dotenv
         def envVars = loadEnv("local.env")
-
 
         // Load AVD name from .env file or default to 'API33Pixel4'
         def avdName = envVars['emulator_avd'] ?: 'API33'
@@ -61,22 +61,39 @@ tasks.register('startEmulator', Exec) {
     }
 }
 
+// Task to start Appium
 tasks.register('startAppium', Exec) {
-    def osName = System.getProperty('os.name').toLowerCase()
-    if (osName.contains('windows')) {
-        commandLine 'cmd', '/c', 'appium > logs\\appium.log 2>&1'
-    } else {
-        commandLine 'sh', '-c', 'appium > logs/appium.log 2>&1 &'
+    doFirst {
+        println 'Starting Appium in a new terminal window...'
+
+        def osName = System.getProperty('os.name').toLowerCase()
+        if (osName.contains('mac')) {
+            // Open a new terminal window and keep it open while running Appium
+            commandLine 'osascript', '-e', '''
+                tell application "Terminal"
+                    do script "appium"
+                    activate
+                end tell
+            '''
+        } else if (osName.contains('windows')) {
+            commandLine 'cmd', '/c', 'appium > logs\\appium.log 2>&1'
+        } else {
+            commandLine 'sh', '-c', 'appium > logs/appium.log 2>&1 &'
+        }
     }
 }
 
+
+
+// Task to run the automation script (run manually)
 tasks.register('runAutomationScript', JavaExec) {
-    dependsOn 'startEmulator', 'startAppium'
     classpath = sourceSets.main.runtimeClasspath
     main = 'MoonbixTest'
 
     doFirst {
+        println 'Running automation script...'
         println 'Waiting for emulator to boot...'
+
         def osName = System.getProperty('os.name').toLowerCase()
         if (osName.contains('windows')) {
             exec {
@@ -87,10 +104,5 @@ tasks.register('runAutomationScript', JavaExec) {
                 commandLine 'sh', '-c', 'adb wait-for-device'
             }
         }
-        Thread.sleep(10000)  // Wait 10 seconds for the emulator to boot
     }
-}
-
-tasks.register('run') {
-    dependsOn 'runAutomationScript'
 }
