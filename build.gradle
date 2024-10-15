@@ -52,9 +52,8 @@ tasks.register('startEmulator', Exec) {
         def avdName = envVars['emulator_avd'] ?: 'API33'
 
         if (osName.contains('windows')) {
-            def emulatorPath = "C:/android_sdk/emulator/emulator.exe"
-            println "Running: ${emulatorPath} -avd ${avdName}"
-            commandLine 'cmd', '/c', "${emulatorPath} -avd ${avdName}"
+            println "Running: emulator -avd ${avdName}"
+            commandLine 'cmd', '/c', 'start', 'cmd', '/k', "emulator -avd ${avdName}"
         } else {
             commandLine 'sh', '-c', "emulator -avd ${avdName}"
         }
@@ -76,7 +75,7 @@ tasks.register('startAppium', Exec) {
                 end tell
             '''
         } else if (osName.contains('windows')) {
-            commandLine 'cmd', '/c', 'appium > logs\\appium.log 2>&1'
+            commandLine 'cmd', '/c', 'start', 'cmd', '/k', 'appium'
         } else {
             commandLine 'sh', '-c', 'appium > logs/appium.log 2>&1 &'
         }
