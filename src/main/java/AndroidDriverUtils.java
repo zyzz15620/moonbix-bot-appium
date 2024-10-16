@@ -117,6 +117,18 @@ public class AndroidDriverUtils {
         }
     }
 
+    public static boolean isNoLongerVisibleXpath(String xpath) {
+        try {
+            return webDriverWait.until(ExpectedConditions.invisibilityOfElementLocated(AppiumBy.xpath(xpath)));
+        } catch (TimeoutException e) {
+            logger.log(Level.SEVERE, "Timeout: Elements with Xpath " + xpath + " were still visible in the given time.", e);
+            throw e;
+        } catch (NoSuchElementException e) {
+            logger.log(Level.SEVERE, "Xpath " + xpath + " not found.", e);
+            throw e;
+        }
+    }
+
     public static boolean isElementXpathExist(String xpath) {
         try {
             WebElement element = waitUntilVisibleXpath(xpath);
