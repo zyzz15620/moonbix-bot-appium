@@ -127,7 +127,7 @@ public class MoonbixTest {
         int retryCount = 0;
 
         while (retryCount < retryLimit) {
-            if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()) {
+            if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerBundle).isDisplayed()) {
                 return;
             } else {
                 DriverLogger.getLogger().info("Captcha failed, restarting the whole process...");
@@ -149,7 +149,7 @@ public class MoonbixTest {
 
     public void checkCaptchaAppear(){
         //assuming the marsIcon is behind the captcha
-        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()){
+        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerBundle).isDisplayed()){
             DriverLogger.getLogger().info("No captcha appear, running playGame()");
             //game entered, no captcha appear
             // do nothing and exist this checking method, continue playing
@@ -236,8 +236,9 @@ public class MoonbixTest {
             List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
             for (WebElement task : tasks) {
                 ActionsUtils.tapElement(task);
-                Thread.sleep(2000);
-                ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(700));
+                Thread.sleep(5000);
+                ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(350));
+                Thread.sleep(5000);
             }
         }
         DriverLogger.getLogger().info("Tasks checked");
