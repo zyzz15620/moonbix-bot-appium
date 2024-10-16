@@ -236,8 +236,8 @@ public class MoonbixTest {
             List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
             for (WebElement task : tasks) {
                 ActionsUtils.tapElement(task);
-                Thread.sleep(2000);
-                ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(700));
+                Thread.sleep(5000);
+                ActionsUtils.swipe(1, y, 350, y, Duration.ofMillis(350));
             }
         }
         DriverLogger.getLogger().info("Tasks checked");
