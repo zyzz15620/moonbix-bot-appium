@@ -50,4 +50,12 @@ public class Data {
 
     //In-game
     public static final String timerIcon = "//android.widget.Image[@text=\"icon-timer\"]";
+    public static final String timerBundle = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View/android.view.View/android.view.View[2]";
+
+    public static final String volumeIcon = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View/android.view.View/android.view.View[1]/android.widget.Image";
+    public static final String volumeBundle = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View/android.view.View/android.view.View[1]";
+
+    public static final String scoreBundle = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View/android.view.View/android.view.View[3]";
+    public static final String scoreIcon = "//android.widget.Image[@text=\"icon-score\"]";
+
 }
