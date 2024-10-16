@@ -45,7 +45,8 @@ public class Data {
     //loading scene
     public static final String purpleStar = "//android.widget.Image[@text=\"star-purple\"]";
     public static final String blueStar = "//android.widget.Image[@text=\"star-blue\"]";
-    public static final String marsIcon = "";
+    public static final String marsIcon = "//android.widget.Image[@text=\"loading-kv\"]";
+    public static final String percentLoading = "//android.widget.TextView[contains(@text, '%')]";
 
     //In-game
     public static final String timerIcon = "//android.widget.Image[@text=\"icon-timer\"]";
