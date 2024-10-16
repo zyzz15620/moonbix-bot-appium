@@ -42,7 +42,11 @@ public class Data {
     //Tasks page
     public static final String unfinishedTasksListXpath = "//android.view.View[@resource-id=\"__APP\"]/android.view.View/android.view.View[android.widget.Image[3] and not(android.widget.Image[@text='check'])]";
 
-    //In-game
+    //loading scene
     public static final String purpleStar = "//android.widget.Image[@text=\"star-purple\"]";
     public static final String blueStar = "//android.widget.Image[@text=\"star-blue\"]";
+    public static final String marsIcon = "";
+
+    //In-game
+    public static final String timerIcon = "//android.widget.Image[@text=\"icon-timer\"]";
 }

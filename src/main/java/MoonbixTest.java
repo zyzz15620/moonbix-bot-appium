@@ -127,7 +127,7 @@ public class MoonbixTest {
         int retryCount = 0;
 
         while (retryCount < retryLimit) {
-            if (AndroidDriverUtils.isElementXpathExist(Data.blueStar)) {
+            if (AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()) {
                 return;
             } else {
                 DriverLogger.getLogger().info("Captcha failed, restarting the whole process...");
@@ -150,7 +150,7 @@ public class MoonbixTest {
 
 
     public void checkCaptchaAppear(){
-        if (AndroidDriverUtils.isElementXpathExist(Data.blueStar)){
+        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.timerIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()){
             DriverLogger.getLogger().info("No captcha appear, running playGame()");
             //game entered, no captcha appear
             // do nothing and exist this checking method, continue playing
@@ -233,7 +233,6 @@ public class MoonbixTest {
 
     public void checkTasksWidget() throws InterruptedException {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.taskWidgetXpath));
-
         if (AndroidDriverUtils.isElementXpathExist(Data.unfinishedTasksListXpath)) {
             List<WebElement> tasks = AndroidDriverUtils.waitUntilAllVisibleXpath(Data.unfinishedTasksListXpath);
             for (WebElement task : tasks) {
