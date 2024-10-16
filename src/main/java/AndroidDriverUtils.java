@@ -29,7 +29,7 @@ public class AndroidDriverUtils {
                 DesiredCapabilities desiredCapabilities = getDesiredCapabilities();
 
                 driver = new AndroidDriver(new URL("http://127.0.0.1:4723/"), desiredCapabilities);
-                webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(15));
                 middleScreenLocation = new HashMap<>();
                 middleScreenLocation.put("x", driver.manage().window().getSize().width / 2);
                 middleScreenLocation.put("y", driver.manage().window().getSize().height / 2);
