@@ -222,7 +222,7 @@ public class MoonbixTest {
 
     public void checkLeaderBoardWidget() throws InterruptedException {
         ActionsUtils.tapElement(AndroidDriverUtils.waitUntilVisibleXpath(Data.leaderboardWidgetXpath));
-        Thread.sleep(1);
+        Thread.sleep(1000);
         ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y + 200, x, y - 200, Duration.ofMillis(700));
         ActionsUtils.swipe(x, y - 200, x, y + 200, Duration.ofMillis(700));
