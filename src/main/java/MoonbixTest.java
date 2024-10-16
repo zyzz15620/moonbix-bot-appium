@@ -127,7 +127,7 @@ public class MoonbixTest {
         int retryCount = 0;
 
         while (retryCount < retryLimit) {
-            if (AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()) {
+            if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()) {
                 return;
             } else {
                 DriverLogger.getLogger().info("Captcha failed, restarting the whole process...");
@@ -147,10 +147,9 @@ public class MoonbixTest {
         }
     }
 
-
-
     public void checkCaptchaAppear(){
-        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.timerIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()){
+        //assuming the marsIcon is behind the captcha
+        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerIcon).isDisplayed()){
             DriverLogger.getLogger().info("No captcha appear, running playGame()");
             //game entered, no captcha appear
             // do nothing and exist this checking method, continue playing
