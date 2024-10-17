@@ -114,11 +114,6 @@ public class MoonbixTest {
     public void alertCaptcha(){
         DriverLogger.getLogger().info("Captcha appeared");
         SoundUtils.alert();
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     //check if captcha still there or get solved
@@ -127,10 +122,10 @@ public class MoonbixTest {
         int retryCount = 0;
 
         while (retryCount < retryLimit) {
-            if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerBundle).isDisplayed()) {
+            if (AndroidDriverUtils.isVisibleXpath(Data.timerBundle)) {
                 return;
             } else {
-                DriverLogger.getLogger().info("Captcha failed, restarting the whole process...");
+                DriverLogger.getLogger().info("Captcha failed to solve in time, restarting the whole process...");
                 try {
                     AndroidDriverUtils.quitAndroidDriver();
                     Thread.sleep(5000);
@@ -148,14 +143,22 @@ public class MoonbixTest {
     }
 
     public void checkCaptchaAppear(){
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //assuming the marsIcon is behind the captcha
-        if (AndroidDriverUtils.isNoLongerVisibleXpath(Data.marsIcon) && AndroidDriverUtils.waitUntilVisibleXpath(Data.timerBundle).isDisplayed()){
+        if (AndroidDriverUtils.isVisibleXpath(Data.timerBundle)){
             DriverLogger.getLogger().info("No captcha appear, running playGame()");
-            //game entered, no captcha appear
-            // do nothing and exist this checking method, continue playing
             return;
         } else {
             alertCaptcha();
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             recheckCaptcha();
         }
     }

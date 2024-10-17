@@ -29,7 +29,7 @@ public class AndroidDriverUtils {
                 DesiredCapabilities desiredCapabilities = getDesiredCapabilities();
 
                 driver = new AndroidDriver(new URL("http://127.0.0.1:4723/"), desiredCapabilities);
-                webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(15));
+                webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(30));
                 middleScreenLocation = new HashMap<>();
                 middleScreenLocation.put("x", driver.manage().window().getSize().width / 2);
                 middleScreenLocation.put("y", driver.manage().window().getSize().height / 2);
@@ -123,6 +123,18 @@ public class AndroidDriverUtils {
         } catch (TimeoutException e) {
             logger.log(Level.SEVERE, "Timeout: Elements with Xpath " + xpath + " were still visible in the given time.", e);
             throw e;
+        } catch (NoSuchElementException e) {
+            logger.log(Level.SEVERE, "Xpath " + xpath + " not found.", e);
+            throw e;
+        }
+    }
+
+    public static boolean isVisibleXpath(String xpath) {
+        try {
+            return webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(AppiumBy.xpath(xpath))) != null;  //Return true
+        } catch (TimeoutException e) {
+            logger.log(Level.INFO, "Timeout: Elements with Xpath " + xpath + " were not visible in the given time.", e);
+            return false;
         } catch (NoSuchElementException e) {
             logger.log(Level.SEVERE, "Xpath " + xpath + " not found.", e);
             throw e;
